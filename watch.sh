@@ -12,15 +12,22 @@ if [[ -z "PAT_TOKEN" ]]; then
     exit 1
 fi
 
-GITHUB_TOKEN="$PAT_TOKEN"
+GITHUB_TOKEN=$PAT_TOKEN
 
 # Start execution time tracking
 start_time=$(date +%s)
 
+if ! [ -x "$(command -v jq)" ]; then
+    echo 'Error: jq is not installed.' >&2
+    exit 1
+    # apk add jq --quiet
+    # apt-get install jq
+fi
+
 # Check rate limit
 rate_limit_response=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/rate_limit")
-remaining=$(echo "$rate_limit_response" | jq -r '.rate.remaining // 0')
-reset_time=$(echo "$rate_limit_response" | jq -r '.rate.reset // 0')
+remaining=$(echo "$rate_limit_response" | jq -r 'rate.remaining // 0')
+reset_time=$(echo "$rate_limit_response" | jq -r 'rate.reset // 0')
 
 if [[ "$remaining" -eq 0 ]]; then
     reset_time_human=$(date -d "@$reset_time" "+%Y-%m-%d %H:%M:%S")
