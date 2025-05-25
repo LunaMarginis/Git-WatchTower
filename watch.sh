@@ -12,7 +12,7 @@ if [[ -z "PAT_TOKEN" ]]; then
     exit 1
 fi
 
-GITHUB_TOKEN=$PAT_TOKEN
+GITHUB_TOKEN="$PAT_TOKEN"
 
 # Start execution time tracking
 start_time=$(date +%s)
@@ -22,11 +22,11 @@ rate_limit_response=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "https://a
 remaining=$(echo "$rate_limit_response" | jq -r '.rate.remaining // 0')
 reset_time=$(echo "$rate_limit_response" | jq -r '.rate.reset // 0')
 
-#if [[ "$remaining" -eq 0 ]]; then
-#    reset_time_human=$(date -d "@$reset_time" "+%Y-%m-%d %H:%M:%S")
-#    echo -e "${RED}Rate limit exceeded. Try again after: $reset_time_human${NC}"
-#    exit 1
-#fi
+if [[ "$remaining" -eq 0 ]]; then
+    reset_time_human=$(date -d "@$reset_time" "+%Y-%m-%d %H:%M:%S")
+    echo -e "${RED}Rate limit exceeded. Try again after: $reset_time_human${NC}"
+    exit 1
+fi
 
 # Hardcoded topic
 input="cyber"
