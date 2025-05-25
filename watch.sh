@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# Set up color variables
-YELLOW='\033[1;93m'
-GREEN='\033[0;32m'
+# Color definitions
 RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Fetch GitHub Token from environment variable
@@ -13,9 +13,15 @@ if [[ -z "$PAT_TOKEN" ]]; then
 fi
 
 GITHUB_TOKEN="$PAT_TOKEN"
+echo "Using GitHub token: ${GITHUB_TOKEN:0:4}****"
 
 # Start execution time tracking
 start_time=$(date +%s)
+
+if ! command -v jq > /dev/null; then
+    echo -e "${RED}Error: jq is not installed.${NC}" >&2
+    exit 1
+fi
 
 # Check rate limit
 rate_limit_response=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/rate_limit")
@@ -28,38 +34,31 @@ if [[ "$remaining" -eq 0 ]]; then
     exit 1
 fi
 
-# Hardcoded topic
 input="cyber"
 topic=$(echo "$input" | tr '[:upper:]' '[:lower:]' | tr " " "+")
 
-# Fetch the total count of repositories
 echo -e "${YELLOW}Fetching repository information for topic: ${GREEN}${input}${NC}"
 response=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
   "https://api.github.com/search/repositories?q=stars%3A%3E50+$topic+sort:stars&per_page=5")
 
-# Validate the API response
 if ! echo "$response" | jq -e . > /dev/null 2>&1; then
     echo -e "${RED}Error: Failed to fetch data from GitHub API. Please check your internet connection or GitHub token.${NC}"
     exit 1
 fi
 
-# Extract total count and validate
 tpc=$(echo "$response" | jq -r '.total_count // 0')
 if [[ "$tpc" -eq 0 ]]; then
     echo -e "${RED}No repositories found for the topic '${input}'.${NC}"
     exit 1
 fi
 
-# Calculate pages needed
 pg=$(( (tpc + 99) / 100 ))
 
-# Initialize counters
 repos_analyzed=0
 repos_retrieved=0
 pages_processed=0
 empty_pages=0
 
-# Remove any old README
 rm -f README.md
 
 cat <<EOF > README.md
