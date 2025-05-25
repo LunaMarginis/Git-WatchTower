@@ -7,12 +7,12 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 # Fetch GitHub Token from environment variable
-if [[ -z "$PAT_TOKEN" ]]; then
+if [[ -z "PAT_TOKEN" ]]; then
     echo -e "${RED}Error: PAT_TOKEN environment variable is not set. Exiting.${NC}"
     exit 1
 fi
 
-GITHUB_TOKEN="$PAT_TOKEN"
+GITHUB_TOKEN=PAT_TOKEN
 echo "token: $GITHUB_TOKEN"
 
 # Start execution time tracking
