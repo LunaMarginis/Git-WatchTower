@@ -12,7 +12,7 @@ if [[ -z "PAT_TOKEN" ]]; then
     exit 1
 fi
 
-GITHUB_TOKEN=PAT_TOKEN
+GITHUB_TOKEN=$PAT_TOKEN
 echo "token: $GITHUB_TOKEN"
 
 # Start execution time tracking
