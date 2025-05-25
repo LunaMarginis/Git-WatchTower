@@ -1,0 +1,30 @@
+name: WatchTower Automation
+
+on:
+  schedule:
+    - cron: '0 0 * * 4'  # Runs every Thursday at midnight UTC
+  workflow_dispatch:  # Allows manual triggering of the workflow
+
+jobs:
+  update-repositories:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Set up dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jq
+
+    - name: Run the Script
+      env:
+        LC_ALL: C.UTF-8
+        LANG: C.UTF-8
+        PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+      run: |
+        chmod +x ./watch.sh
+        ./watch.sh
