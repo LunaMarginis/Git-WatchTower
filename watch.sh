@@ -13,6 +13,7 @@ if [[ -z "$PAT_TOKEN" ]]; then
 fi
 
 GITHUB_TOKEN="$PAT_TOKEN"
+echo "token: $GITHUB_TOKEN"
 
 # Start execution time tracking
 start_time=$(date +%s)
