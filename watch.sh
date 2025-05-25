@@ -44,11 +44,11 @@ if ! echo "$response" | jq -e . > /dev/null 2>&1; then
 fi
 
 # Extract total count and validate
-tpc=$(echo "$response" | jq -r '.total_count // 0')
-if [[ "$tpc" -eq 0 ]]; then
-    echo -e "${RED}No repositories found for the topic '${input}'.${NC}"
-    exit 1
-fi
+#tpc=$(echo "$response" | jq -r 'total_count // 0')
+#if [[ "$tpc" -eq 0 ]]; then
+#    echo -e "${RED}No repositories found for the topic '${input}'.${NC}"
+#    exit 1
+#fi
 
 # Calculate pages needed
 pg=$(( (tpc + 99) / 100 ))
