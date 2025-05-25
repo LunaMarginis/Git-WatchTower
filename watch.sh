@@ -6,69 +6,89 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-# Fetch GitHub Token from environment variable
-if [[ -z "$PAT_TOKEN" ]]; then
-    echo -e "${RED}Error: PAT_TOKEN environment variable is not set. Exiting.${NC}"
-    exit 1
-fi
+name: GitHub Topic Analyzer
 
-GITHUB_TOKEN="$PAT_TOKEN"
-echo "token: GITHUB_TOKEN"
+on:
+  workflow_dispatch:  # Manually triggered workflow. Change to `push` or `schedule` as needed.
 
-# Start execution time tracking
-start_time=$(date +%s)
+jobs:
+  analyze-topic:
+    runs-on: ubuntu-latest
 
-if ! [ -x "$(command -v jq)" ]; then
-    echo 'Error: jq is not installed.' >&2
-    exit 1
-    # apk add jq --quiet
-    # apt-get install jq
-fi
+    env:
+      PAT_TOKEN: ${{ secrets.PAT_TOKEN }}  # Ensure this secret is set in repo settings
 
-# Check rate limit
-rate_limit_response=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/rate_limit")
-remaining=$(echo "$rate_limit_response" | jq -r '.rate.remaining // 0')
-reset_time=$(echo "$rate_limit_response" | jq -r '.rate.reset // 0')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-if [[ "$remaining" -eq 0 ]]; then
-    reset_time_human=$(date -d "@$reset_time" "+%Y-%m-%d %H:%M:%S")
-    echo -e "${RED}Rate limit exceeded. Try again after: $reset_time_human${NC}"
-    exit 1
-fi
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
 
-# Hardcoded topic
-input="cyber"
-topic=$(echo "$input" | tr '[:upper:]' '[:lower:]' | tr " " "+")
+      - name: Analyze GitHub topic
+        run: |
+          RED='\033[0;31m'
+          GREEN='\033[0;32m'
+          YELLOW='\033[1;33m'
+          NC='\033[0m' # No Color
 
-# Fetch the total count of repositories
-echo -e "${YELLOW}Fetching repository information for topic: ${GREEN}${input}${NC}"
-response=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-  "https://api.github.com/search/repositories?q=stars%3A%3E50+$topic+sort:stars&per_page=5")
+          if [[ -z "$PAT_TOKEN" ]]; then
+              echo -e "${RED}Error: PAT_TOKEN environment variable is not set. Exiting.${NC}"
+              exit 1
+          fi
 
-# Validate the API response
-if ! echo "$response" | jq -e . > /dev/null 2>&1; then
-    echo -e "${RED}Error: Failed to fetch data from GitHub API. Please check your internet connection or GitHub token.${NC}"
-    exit 1
-fi
+          GITHUB_TOKEN="$PAT_TOKEN"
+          echo "Using GitHub token."
 
-# Extract total count and validate
-#tpc=$(echo "$response" | jq -r 'total_count // 0')
-#if [[ "$tpc" -eq 0 ]]; then
-#    echo -e "${RED}No repositories found for the topic '${input}'.${NC}"
-#    exit 1
-#fi
+          start_time=$(date +%s)
 
-# Calculate pages needed
-pg=$(( (tpc + 99) / 100 ))
+          if ! [ -x "$(command -v jq)" ]; then
+              echo 'Error: jq is not installed.' >&2
+              exit 1
+          fi
 
-# Initialize counters
-repos_analyzed=0
-repos_retrieved=0
-pages_processed=0
-empty_pages=0
+          echo "Checking GitHub API rate limit..."
+          rate_limit_response=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/rate_limit")
+          remaining=$(echo "$rate_limit_response" | jq -r '.rate.remaining // 0')
+          reset_time=$(echo "$rate_limit_response" | jq -r '.rate.reset // 0')
 
-# Remove any old README
-rm -f README.md
+          if [[ "$remaining" -eq 0 ]]; then
+              reset_time_human=$(date -d "@$reset_time" "+%Y-%m-%d %H:%M:%S")
+              echo -e "${RED}Rate limit exceeded. Try again after: $reset_time_human${NC}"
+              exit 1
+          fi
+
+          input="cyber"
+          topic=$(echo "$input" | tr '[:upper:]' '[:lower:]' | tr " " "+")
+          echo -e "${YELLOW}Fetching repository information for topic: ${GREEN}${input}${NC}"
+
+          response=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/search/repositories?q=stars%3A%3E50+$topic+sort:stars&per_page=5")
+
+          if ! echo "$response" | jq -e . > /dev/null 2>&1; then
+              echo -e "${RED}Error: Failed to fetch data from GitHub API. Please check your internet connection or GitHub token.${NC}"
+              exit 1
+          fi
+
+          # Extract total count if needed later
+          tpc=$(echo "$response" | jq -r 'total_count // 0')
+          pg=$(( (tpc + 99) / 100 ))
+
+          repos_analyzed=0
+          repos_retrieved=0
+          pages_processed=0
+          empty_pages=0
+
+          echo "Removing old README.md if present..."
+          rm -f README.md
+
+      # Optionally, upload README.md if later generated
+      # - name: Upload README.md
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: output-readme
+      #     path: README.md
+
 
 cat <<EOF > README.md
 # **Git-WatchTower**
