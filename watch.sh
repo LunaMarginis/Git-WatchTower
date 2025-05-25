@@ -26,8 +26,8 @@ fi
 
 # Check rate limit
 rate_limit_response=$(curl -s -H "Authorization: token $GITHUB_TOKEN" "https://api.github.com/rate_limit")
-remaining=$(echo "$rate_limit_response" | jq -r 'rate.remaining // 0')
-reset_time=$(echo "$rate_limit_response" | jq -r 'rate.reset // 0')
+remaining=$(echo "$rate_limit_response" | jq -r '.rate.remaining // 0')
+reset_time=$(echo "$rate_limit_response" | jq -r '.rate.reset // 0')
 
 if [[ "$remaining" -eq 0 ]]; then
     reset_time_human=$(date -d "@$reset_time" "+%Y-%m-%d %H:%M:%S")
