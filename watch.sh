@@ -13,7 +13,6 @@ if [[ -z "$PAT_TOKEN" ]]; then
 fi
 
 GITHUB_TOKEN="$PAT_TOKEN"
-echo "Using GitHub token: ${GITHUB_TOKEN:0:4}****"
 
 # Start execution time tracking
 start_time=$(date +%s)
@@ -64,20 +63,18 @@ rm -f README.md
 cat <<EOF > README.md
 # **Git-WatchTower**
 
-Eyes on cybersecurity repositories 
+Eyes on cybersecurity repositories! 
 
 ---
 
 
-## **Summary of Today's Analysis**
+## **Summary of the Analysis**
 
 | Metric                    | Value                   |
 |---------------------------|-------------------------|
 | Execution Date            | $(date '+%Y-%m-%d %H:%M:%S') |
 | Repositories Analyzed     | <REPOS_ANALYZED>       |
-| Repositories Retrieved    | <REPOS_RETRIEVED>      |
-| Pages Processed           | <PAGES_PROCESSED>      |
-| Consecutive Empty Pages   | <EMPTY_PAGES>          |
+
 
 ---
 
