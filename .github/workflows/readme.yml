@@ -2,7 +2,7 @@ name: WatchTower Automation
 
 on:
   schedule:
-    - cron: '0 0 * * 4'  # Runs every Thursday at midnight UTC
+    - cron: '0 0 * * 3'  # Runs every Wednesday at midnight UTC
   workflow_dispatch:  # Allows manual triggering of the workflow
 
 jobs:
